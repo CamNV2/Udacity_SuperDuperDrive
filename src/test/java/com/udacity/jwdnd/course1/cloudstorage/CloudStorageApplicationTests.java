@@ -13,6 +13,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 
 import java.io.File;
+import java.util.List;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CloudStorageApplicationTests {
 
@@ -44,6 +46,208 @@ class CloudStorageApplicationTests {
 		Assertions.assertEquals("Login", driver.getTitle());
 	}
 
+	@Test
+	public void checkUserAuthentication(){
+		driver.get("http://localhost:" + this.port + "/home");
+		Assertions.assertEquals("Login", driver.getTitle());
+
+		driver.get("http://localhost:" + this.port + "/login");
+		Assertions.assertEquals("Login", driver.getTitle());
+
+		driver.get("http://localhost:" + this.port + "/signup");
+		Assertions.assertEquals("Sign Up", driver.getTitle());
+
+	}
+
+	@Test
+	public void checkLogin(){
+		doMockSignUp("duong","nhan","nhan","111");
+		doLogIn("nhan","111");
+
+		WebElement logoutButton= driver.findElement(By.id("logout-button"));
+		logoutButton.click();
+
+		Assertions.assertFalse(driver.getTitle().equals("Home"));
+		Assertions.assertEquals("Login", driver.getTitle());
+
+	}
+
+	public void redirectToNotesTab(){
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+
+		driver.get("http://localhost:" + this.port + "/home");
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("nav-notes-tab")));
+		driver.findElement(By.id("nav-notes-tab")).click();
+	}
+
+	@Test
+	public void createNote() {
+		doMockSignUp("Cam","Nguyen","CamNV","camnv");
+
+		doLogIn("CamNV", "camnv");
+
+		WebElement notesTab= driver.findElement(By.id("nav-notes-tab"));
+		notesTab.click();
+
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("nav-notes")));
+		Assertions.assertTrue(driver.findElement(By.id("nav-notes")).isDisplayed());
+
+		WebElement addNoteButton= driver.findElement(By.id("add-note"));
+		addNoteButton.click();
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("note-title")));
+		WebElement inputTitle = driver.findElement(By.id("note-title"));
+		inputTitle.click();
+		inputTitle.sendKeys("NoteTitle");
+
+		WebElement inputDescription = driver.findElement(By.id("note-description"));
+		inputDescription.click();
+		inputDescription.sendKeys("NoteDescription.");
+
+		WebElement submitNote = driver.findElement(By.id("submitNote"));
+		submitNote.click();
+
+		redirectToNotesTab();
+
+	}
+
+	@Test
+	public void updateNote()  {
+		doMockSignUp("Cam","Nguyen","CamNV","camnv");
+
+		doLogIn("CamNV", "camnv");
+
+		WebElement notesTab= driver.findElement(By.id("nav-notes-tab"));
+		notesTab.click();
+
+		createNote();
+
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("edit-note")));
+		WebElement btnEditNote = driver.findElement(By.id("edit-note"));
+		btnEditNote.click();
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("note-title")));
+		WebElement inputTitle = driver.findElement(By.id("note-title"));
+		inputTitle.click();
+		inputTitle.clear();
+		inputTitle.sendKeys("Test Update");
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("note-description")));
+		WebElement inputDescription = driver.findElement(By.id("note-description"));
+		inputDescription.click();
+		inputDescription.clear();
+		inputDescription.sendKeys("UpdateDescription");
+
+		WebElement submitNote = driver.findElement(By.id("submitNote"));
+		submitNote.click();
+
+		redirectToNotesTab();
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("userTable")));
+		Assertions.assertTrue(driver.findElement(By.id("table-description")).getText().contains("UpdateDescription"));
+
+	}
+	@Test
+	public void deleteNote() throws InterruptedException {
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+
+		createNote();
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("delete-note")));
+		WebElement btnEditNote = driver.findElement(By.id("delete-note"));
+		btnEditNote.click();
+
+		redirectToNotesTab();
+	}
+
+	public void redirectToCredentialsTab(){
+		driver.get("http://localhost:" + this.port + "/home");
+		driver.findElement(By.id("nav-credentials-tab")).click();
+	}
+
+	@Test
+	public void createCredential() throws InterruptedException {
+		doMockSignUp("Cam","Nguyen","CamNV","camnv");
+
+		doLogIn("CamNV", "camnv");
+
+		WebElement credentialsTab= driver.findElement(By.id("nav-credentials-tab"));
+		credentialsTab.click();
+
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+		String inputCredentialPassword = "1234";
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("add-credentials-button")));
+		WebElement addCredentialsButton= driver.findElement(By.id("add-credentials-button"));
+		addCredentialsButton.click();
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("credential-url")));
+		WebElement inputURL = driver.findElement(By.id("credential-url"));
+		inputURL.click();
+		inputURL.sendKeys("https://www.google.com/");
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("credential-username")));
+		WebElement inputUsername = driver.findElement(By.id("credential-username"));
+		inputUsername.click();
+		inputUsername.sendKeys("Maia");
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("credential-password")));
+		WebElement inputPassword = driver.findElement(By.id("credential-password"));
+		inputPassword.click();
+		inputPassword.sendKeys(inputCredentialPassword);
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("submit-credential-button")));
+		WebElement submitNote = driver.findElement(By.id("submit-credential-button"));
+		submitNote.click();
+
+		redirectToCredentialsTab();
+
+		WebElement credentialsTable = driver.findElement(By.id("credentialTable"));
+		List<WebElement> credList = credentialsTable.findElements(By.tagName("tbody"));
+
+		Assertions.assertEquals(1, credList.size());
+
+	}
+
+	@Test
+	public void editCredentials() throws InterruptedException {
+		createCredential();
+
+		WebDriverWait webDriverWait = new WebDriverWait(driver, 2);
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("edit-credential-button")));
+		WebElement editCredentialsButton= driver.findElement(By.id("edit-credential-button"));
+		editCredentialsButton.click();
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("credential-url")));
+		WebElement inputURL = driver.findElement(By.id("credential-url"));
+		inputURL.click();
+		inputURL.clear();
+		inputURL.sendKeys("https://github.com/MaiaDandachi");
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("credential-password")));
+		String inputPassword = driver.findElement(By.id("credential-password")).getAttribute("value");
+
+		webDriverWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("submit-credential-button")));
+		WebElement submitCredential = driver.findElement(By.id("submit-credential-button"));
+		submitCredential.click();
+
+		redirectToCredentialsTab();
+
+	}
+
+	@Test
+	public void deleteCredentials() throws InterruptedException {
+		createCredential();
+		WebElement btnDel = driver.findElement(By.id("delete-cre"));
+		btnDel.click();
+		redirectToCredentialsTab();
+	}
 	/**
 	 * PLEASE DO NOT DELETE THIS method.
 	 * Helper method for Udacity-supplied sanity checks.
@@ -82,15 +286,13 @@ class CloudStorageApplicationTests {
 		WebElement buttonSignUp = driver.findElement(By.id("buttonSignUp"));
 		buttonSignUp.click();
 
-		/* Check that the sign up was successful. 
+		/* Check that the signup was successful.
 		// You may have to modify the element "success-msg" and the sign-up 
 		// success message below depening on the rest of your code.
 		*/
 		Assertions.assertTrue(driver.findElement(By.id("success-msg")).getText().contains("You successfully signed up!"));
 	}
 
-	
-	
 	/**
 	 * PLEASE DO NOT DELETE THIS method.
 	 * Helper method for Udacity-supplied sanity checks.
@@ -135,7 +337,7 @@ class CloudStorageApplicationTests {
 		// Create a test account
 		doMockSignUp("Redirection","Test","RT","123");
 		
-		// Check if we have been redirected to the log in page.
+		// Check if we have been redirected to the login page.
 		Assertions.assertEquals("http://localhost:" + this.port + "/login", driver.getCurrentUrl());
 	}
 

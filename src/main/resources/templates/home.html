@@ -11,8 +11,8 @@
     <body class="p-3 mb-2 bg-light text-black">
         <div class="container">
             <div id="logoutDiv">
-                <form action="#" method="POST">
-                    <button type="submit" class="btn btn-secondary float-right">Logout</button>
+                <form action="#" method="POST" th:action="@{/logout}">
+                    <button id="logout-button" type="submit" class="btn btn-secondary float-right">Logout</button>
                 </form>
             </div>
             <div id="contentDiv" style="clear: right;">
@@ -49,13 +49,14 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                <tr>
+                                <tr  th:each="item : ${fileList}">
                                     <td>
-                                        <a target="_blank" class="btn btn-success">View</a>
-                                        <a  class="btn btn-danger">Delete</a>
+                                        <a th:href="@{/downloadFile/{id}(id=${item.fileId})}" target="_blank" class="btn btn-success">View</a>
+                                        <a th:href="@{/deleteFile/{id}(id=${item.fileId})}" class="btn btn-danger">Delete</a>
                                     </td>
-                                    <th scope="row">ExampleFile.txt</th>
+                                    <th scope="row" th:text="${item.fileName}">FileName</th>
                                 </tr>
+
                                 </tbody>
                             </table>
                         </div>
@@ -74,15 +75,15 @@
                                         <th style="width: 60%" scope="col">Description</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <button type="button" class="btn btn-success">Edit</button>
-                                            <a class="btn btn-danger">Delete</a>
-                                        </td>
-                                        <th scope="row">Example Note Title</th>
-                                        <td>Example Note Description </td>
-                                    </tr>
+                                <tbody id ="tbodyNote">
+                                <tr th:each="item : ${noteList} ">
+                                    <td>
+                                        <button id = "edit-note" type="button" class="btn btn-success" th:attr="onclick='showNoteModal(\'edit\', ' + ${item.noteId} + ', \'' + ${item.noteTitle} + '\', \'' + ${item.noteDescription} + '\')'">Edit</button>
+                                        <a id = "delete-note" class="btn btn-danger" th:href="@{/delete-note/{id}(id=${item.noteId})}">Delete</a>
+                                    </td>
+                                    <th scope="row" th:text="${item.noteTitle}"></th>
+                                    <td id = "table-description" th:text="${item.noteDescription}"></tdth:text> </td>
+                                </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -97,7 +98,7 @@
                                         </button>
                                     </div>
                                     <div class="modal-body">
-                                        <form action="#" method="POST">
+                                        <form id="noteForm" action="#" th:action="@{/saveNote}"  th:object="${noteForm}" method="POST">
                                             <input type="hidden" name="noteId" id="note-id">
                                             <div class="form-group">
                                                 <label for="note-title" class="col-form-label">Title</label>
@@ -134,14 +135,15 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                <tr>
+                                <tr th:each="item : ${credentialsList} ">
                                     <td>
-                                        <button type="button" class="btn btn-success">Edit</button>
-                                        <a class="btn btn-danger">Delete</a>
+                                        <button id="edit-cre" type="button" class="btn btn-success" th:attr="onclick='showCredentialModal(\'edit\', ' + ${item.credentialId} + ', \'' + ${item.url} + '\', \'' + ${item.username} + '\', \'' + ${item.password} + '\', \'' + ${item.decryptValue} + '\')'">Edit</button>
+
+                                        <a id = "delete-cre" class="btn btn-danger" th:href="@{/delete-Credentials/{id}(id=${item.userId})}">Delete</a>
                                     </td>
-                                    <th scope="row">Example Credential URL</th>
-                                    <td>Example Credential Username</td>
-                                    <td>Example Credential Password</td>
+                                    <th scope="row" th:text="${item.url}">Example Credential URL</th>
+                                    <td id="cre-userNm" th:text="${item.username}">Example Credential Username</td>
+                                    <td th:text="${item.password}">Example Credential Password</td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -157,7 +159,7 @@
                                         </button>
                                     </div>
                                     <div class="modal-body">
-                                        <form action="#" method="POST">
+                                        <form id = "credentialForm" action="#" th:action="@{/saveCredentials}" method="POST">
                                             <input type="hidden" name="credentialId" id="credential-id">
                                             <div class="form-group">
                                                 <label for="credential-url" class="col-form-label">URL</label>
@@ -167,9 +169,13 @@
                                                 <label for="credential-username" class="col-form-label">Username</label>
                                                 <input type="text" name= "username" class="form-control" id="credential-username" maxlength="30" required>
                                             </div>
-                                            <div class="form-group">
+                                            <div class="form-group" id ="credential-password-group">
                                                 <label for="credential-password" class="col-form-label">Password</label>
                                                 <input type="text" name= "password" class="form-control" id="credential-password" maxlength="30" required>
+                                            </div>
+                                            <div class="form-group" id = "credential-decryptValue-group">
+                                                <label class="col-form-label">Password</label>
+                                                <input type="text" name= "decryptValue" class="form-control" id="credential-decryptValue" maxlength="30">
                                             </div>
                                             <button id="credentialSubmit" type="submit" class="d-none"></button>
                                         </form>
@@ -192,22 +198,57 @@
 
         <!--For opening the note modal-->
         <script type="text/javascript">
-            // For opening the note modal
-            function showNoteModal(noteId, noteTitle, noteDescription) {
-                $('#note-id').val(noteId ? noteId : '');
-                $('#note-title').val(noteTitle ? noteTitle : '');
-                $('#note-description').val(noteDescription ? noteDescription : '');
+            function showNoteModal(action, noteId, title, content) {
+                let titleId = document.getElementById('note-id');
+                let titleInput = document.getElementById('note-title');
+                let contentInput = document.getElementById('note-description');
+
+                if (action === 'add') {
+                    titleInput.value = '';
+                    contentInput.value = '';
+                } else if (action === 'edit' && noteId) {
+                    titleId.value = noteId;
+                    titleInput.value = title;
+                    contentInput.value = content;
+                }
+
                 $('#noteModal').modal('show');
             }
-
             // For opening the credentials modal
-            function showCredentialModal(credentialId, url, username, password) {
-                $('#credential-id').val(credentialId ? credentialId : '');
-                $('#credential-url').val(url ? url : '');
-                $('#credential-username').val(username ? username : '');
-                $('#credential-password').val(password ? password : '');
+            function showCredentialModal(action,credentialId, url, username, password, decryptValue) {
+                let pass = document.getElementById("credential-password-group");
+                let des = document.getElementById("credential-decryptValue-group");
+                let credentialIdFrom = document.getElementById('credential-id');
+                let credentialUrl = document.getElementById('credential-url');
+                let credentialUserName = document.getElementById('credential-username');
+                let credentialPassWord = document.getElementById('credential-password');
+                let credentialDecryptValue = document.getElementById('credential-decryptValue');
+
+                if (action === 'add') {
+                    credentialUrl.value = '';
+                    credentialUserName.value = '';
+                    credentialPassWord.value = '';
+                    pass.style.display = "block";
+                    des.style.display = "none";
+                } else if (action === 'edit' && credentialIdFrom) {
+                    credentialIdFrom.value = credentialId;
+                    credentialUrl.value = url;
+                    credentialUserName.value = username;
+                    credentialPassWord.value = decryptValue;
+                    credentialDecryptValue.value = decryptValue;
+                    pass.style.display = "none";
+                    des.style.display = "block";
+                }
                 $('#credentialModal').modal('show');
             }
+
+            document.addEventListener("DOMContentLoaded", function() {
+                let credentialPassword = document.getElementById('credential-password');
+                let credentialDecrypt = document.getElementById('credential-decryptValue');
+                credentialDecrypt.addEventListener("input", function() {
+                    credentialPassword.value = credentialDecrypt.value;
+                });
+            });
         </script>
     </body>
 </html>

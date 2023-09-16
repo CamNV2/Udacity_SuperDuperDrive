@@ -11,11 +11,13 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.File;
 import java.util.List;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class CloudStorageApplicationTests {
 
 	@LocalServerPort
@@ -36,7 +38,7 @@ class CloudStorageApplicationTests {
 	@AfterEach
 	public void afterEach() {
 		if (this.driver != null) {
-			driver.quit();
+			//driver.quit();
 		}
 	}
 

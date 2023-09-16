@@ -30,7 +30,7 @@ public class CredentialsController {
         return"redirect:/home";
     }
 
-    @PostMapping("saveCredentials")
+    @PostMapping("/saveCredentials")
     public String saveCredentials(@ModelAttribute("credentialsFrom") Credentials credentials, Model model, Authentication authentication){
         User user = userService.getUser(authentication.getName());
         if(credentials.getCredentialId() != null ){

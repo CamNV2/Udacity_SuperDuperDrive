@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @Controller
-@RequestMapping("/home/files")
 public class FileController {
     private FileService fileService;
     private UserService userService;

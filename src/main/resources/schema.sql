@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS CREDENTIALS (
     credentialid INT PRIMARY KEY auto_increment,
     url VARCHAR(100),
     username VARCHAR (30),
+    salt VARCHAR(100),
     key VARCHAR,
     password VARCHAR,
     userid INT,

@@ -24,7 +24,7 @@ public class NoteController {
         noteService.deleteNote(id);
         return"redirect:/home";
     }
-    @PostMapping("saveNote")
+    @PostMapping("/save-note")
     public String saveNote(@ModelAttribute("noteForm") Note note,Model model, Authentication authentication){
         User user = new User();
         user = userServicel.getUser(authentication.getName());

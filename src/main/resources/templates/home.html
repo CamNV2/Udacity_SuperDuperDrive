@@ -11,21 +11,28 @@
     <body class="p-3 mb-2 bg-light text-black">
         <div class="container">
             <div id="logoutDiv">
-                <form action="#" method="POST" th:action="@{/logout}">
-                    <button id="logout-button" type="submit" class="btn btn-secondary float-right">Logout</button>
+                <form action="#" th:action="@{/login}" method="GET">
+                    <button id = "logout-button" type="submit" class="btn btn-secondary float-right">Logout</button>
                 </form>
             </div>
             <div id="contentDiv" style="clear: right;">
                 <nav style="clear: right;">
                     <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                        <a class="nav-item nav-link active" id="nav-files-tab" data-toggle="tab" href="#nav-files" role="tab" aria-controls="nav-files" aria-selected="true">Files</a>
-                        <a class="nav-item nav-link" id="nav-notes-tab" data-toggle="tab" href="#nav-notes" role="tab" aria-controls="nav-notes" aria-selected="false">Notes</a>
-                        <a class="nav-item nav-link" id="nav-credentials-tab" data-toggle="tab" href="#nav-credentials" role="tab" aria-controls="nav-credentials" aria-selected="false">Credentials</a>
+                        <a class="nav-item nav-link" id="nav-files-tab" data-toggle="tab" href="#nav-files" role="tab" aria-controls="nav-files" aria-selected="false" >Files</a>
+                        <a class="nav-item nav-link" id="nav-notes-tab" data-toggle="tab" href="#nav-notes" role="tab" aria-controls="nav-notes" aria-selected="false" >Notes</a>
+                        <a class="nav-item nav-link" id="nav-credentials-tab" data-toggle="tab" href="#nav-credentials" role="tab" aria-controls="nav-credentials" aria-selected="false" >Credentials</a>
                     </div>
                 </nav>
+
                 <div class="tab-content" id="nav-tabContent">
-                    <div class="tab-pane fade show active" id="nav-files" role="tabpanel" aria-labelledby="nav-files-tab">
-                        <form action="#" enctype="multipart/form-data" method="POST">
+                    <div class="tab-pane fade" id="nav-files" role="tabpanel" aria-labelledby="nav-files-tab">
+                        <form action="#"  th:action="@{/addFile}" enctype="multipart/form-data" method="POST">
+                            <div th:if="${error}" class="alert alert-danger">
+                                <span th:text="${error}" />
+                            </div>
+                            <div th:if="${success}" class="alert alert-success" style="color: green;">>
+                                <span th:text="${success}" />
+                            </div>
                             <div class="container">
                                 <div class="row" style="margin: 1em;">
                                     <div class="col-sm-2">
@@ -62,7 +69,7 @@
                         </div>
                     </div>
                     <div class="tab-pane fade" id="nav-notes" role="tabpanel" aria-labelledby="nav-notes-tab">
-                        <button style="margin: 0.25em;" type="button" class="btn btn-info float-right" onclick="showNoteModal()">
+                        <button id="add-note" style="margin: 0.25em;" type="button" class="btn btn-info float-right" onclick="showNoteModal('')">
                             + Add a New Note
                         </button>
 
@@ -76,19 +83,19 @@
                                     </tr>
                                 </thead>
                                 <tbody id ="tbodyNote">
-                                <tr th:each="item : ${noteList} ">
-                                    <td>
-                                        <button id = "edit-note" type="button" class="btn btn-success" th:attr="onclick='showNoteModal(\'edit\', ' + ${item.noteId} + ', \'' + ${item.noteTitle} + '\', \'' + ${item.noteDescription} + '\')'">Edit</button>
-                                        <a id = "delete-note" class="btn btn-danger" th:href="@{/delete-note/{id}(id=${item.noteId})}">Delete</a>
-                                    </td>
-                                    <th scope="row" th:text="${item.noteTitle}"></th>
-                                    <td id = "table-description" th:text="${item.noteDescription}"></tdth:text> </td>
-                                </tr>
+                                    <tr th:each="item : ${noteList} ">
+                                        <td>
+                                            <button id = "edit-note" type="button" class="btn btn-success" th:attr="onclick='showNoteModal(\'edit\', ' + ${item.noteId} + ', \'' + ${item.noteTitle} + '\', \'' + ${item.noteDescription} + '\')'">Edit</button>
+                                            <a id = "delete-note" class="btn btn-danger" th:href="@{/delete-note/{id}(id=${item.noteId})}">Delete</a>
+                                        </td>
+                                        <th scope="row" th:text="${item.noteTitle}"></th>
+                                        <td id = "table-description" th:text="${item.noteDescription}"></tdth:text> </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
 
-                        <div class="modal fade" id="noteModal" tabindex="-1" role="dialog" aria-labelledby="noteModalLabel" aria-hidden="true">
+                        <div class="modal fade" id="noteModal" th:fragment="noteFormFragment" tabindex="-1" role="dialog" aria-labelledby="noteModalLabel" aria-hidden="true">
                             <div class="modal-dialog" role="document">
                                 <div class="modal-content">
                                     <div class="modal-header">
@@ -98,7 +105,7 @@
                                         </button>
                                     </div>
                                     <div class="modal-body">
-                                        <form id="noteForm" action="#" th:action="@{/saveNote}"  th:object="${noteForm}" method="POST">
+                                        <form id="noteForm" action="#" th:action="@{/save-note}"  th:object="${noteForm}" method="POST">
                                             <input type="hidden" name="noteId" id="note-id">
                                             <div class="form-group">
                                                 <label for="note-title" class="col-form-label">Title</label>
@@ -113,14 +120,14 @@
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                        <button type="button" class="btn btn-primary" onclick="$('#noteSubmit').click();">Save changes</button>
+                                        <button id = "submitNote" type="button" class="btn btn-primary" onclick="$('#noteSubmit').click();">Save changes</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="tab-pane fade" id="nav-credentials" role="tabpanel" aria-labelledby="nav-credentials-tab">
-                        <button style="margin: 0.25em;" type="button" class="btn btn-info float-right" onclick="showCredentialModal()">
+                        <button id = "add-cre" style="margin: 0.25em;" type="button" class="btn btn-info float-right" onclick="showCredentialModal('add')">
                             + Add a New Credential
                         </button>
 
@@ -134,7 +141,7 @@
                                         <th style="width: 25%" scope="col">Password</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id = "tbody-cre" >
                                 <tr th:each="item : ${credentialsList} ">
                                     <td>
                                         <button id="edit-cre" type="button" class="btn btn-success" th:attr="onclick='showCredentialModal(\'edit\', ' + ${item.credentialId} + ', \'' + ${item.url} + '\', \'' + ${item.username} + '\', \'' + ${item.password} + '\', \'' + ${item.decryptValue} + '\')'">Edit</button>
@@ -169,11 +176,11 @@
                                                 <label for="credential-username" class="col-form-label">Username</label>
                                                 <input type="text" name= "username" class="form-control" id="credential-username" maxlength="30" required>
                                             </div>
-                                            <div class="form-group" id ="credential-password-group">
+                                            <div class="form-group" id ="password-group">
                                                 <label for="credential-password" class="col-form-label">Password</label>
                                                 <input type="text" name= "password" class="form-control" id="credential-password" maxlength="30" required>
                                             </div>
-                                            <div class="form-group" id = "credential-decryptValue-group">
+                                            <div class="form-group" id = "decrypt-password-group">
                                                 <label class="col-form-label">Password</label>
                                                 <input type="text" name= "decryptValue" class="form-control" id="credential-decryptValue" maxlength="30">
                                             </div>
@@ -182,7 +189,7 @@
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                        <button type="button" class="btn btn-primary" onclick="$('#credentialSubmit').click();">Save changes</button>
+                                        <button id = "submitCre" type="button" class="btn btn-primary" onclick="$('#credentialSubmit').click();">Save changes</button>
                                     </div>
                                 </div>
                             </div>
@@ -196,13 +203,13 @@
         <script th:src="@{/js/popper.min.js}"></script>
         <script th:src="@{/js/bootstrap.min.js}"></script>
 
-        <!--For opening the note modal-->
         <script type="text/javascript">
-            function showNoteModal(action, noteId, title, content) {
-                let titleId = document.getElementById('note-id');
-                let titleInput = document.getElementById('note-title');
-                let contentInput = document.getElementById('note-description');
 
+            // function opening the note modal
+            function showNoteModal(action, noteId, title, content) {
+                const titleId = document.getElementById('note-id');
+                const titleInput = document.getElementById('note-title');
+                const contentInput = document.getElementById('note-description');
                 if (action === 'add') {
                     titleInput.value = '';
                     contentInput.value = '';
@@ -211,42 +218,61 @@
                     titleInput.value = title;
                     contentInput.value = content;
                 }
-
                 $('#noteModal').modal('show');
             }
             // For opening the credentials modal
             function showCredentialModal(action,credentialId, url, username, password, decryptValue) {
-                let pass = document.getElementById("credential-password-group");
-                let des = document.getElementById("credential-decryptValue-group");
-                let credentialIdFrom = document.getElementById('credential-id');
-                let credentialUrl = document.getElementById('credential-url');
-                let credentialUserName = document.getElementById('credential-username');
-                let credentialPassWord = document.getElementById('credential-password');
-                let credentialDecryptValue = document.getElementById('credential-decryptValue');
-
+                const passwordGroup = document.getElementById("password-group");
+                const desPasswordGroup = document.getElementById("decrypt-password-group");
+                const credentialFrom = document.getElementById('credential-id');
+                const credentialUrl = document.getElementById('credential-url');
+                const credentialUserName = document.getElementById('credential-username');
+                const credentialPassWord = document.getElementById('credential-password');
+                const credentialDecryptValue = document.getElementById('credential-decryptValue');
                 if (action === 'add') {
                     credentialUrl.value = '';
                     credentialUserName.value = '';
                     credentialPassWord.value = '';
-                    pass.style.display = "block";
-                    des.style.display = "none";
-                } else if (action === 'edit' && credentialIdFrom) {
-                    credentialIdFrom.value = credentialId;
+                    passwordGroup.style.display = "block";
+                    desPasswordGroup.style.display = "none";
+                } else if (action === 'edit' && credentialFrom) {
+                    credentialFrom.value = credentialId;
                     credentialUrl.value = url;
                     credentialUserName.value = username;
                     credentialPassWord.value = decryptValue;
                     credentialDecryptValue.value = decryptValue;
-                    pass.style.display = "none";
-                    des.style.display = "block";
+                    passwordGroup.style.display = "none";
+                    desPasswordGroup.style.display = "block";
                 }
-                $('#credentialModal').modal('show');
-            }
-
+                    $('#credentialModal').modal('show');
+                }
+            // handle event onload
             document.addEventListener("DOMContentLoaded", function() {
-                let credentialPassword = document.getElementById('credential-password');
-                let credentialDecrypt = document.getElementById('credential-decryptValue');
-                credentialDecrypt.addEventListener("input", function() {
-                    credentialPassword.value = credentialDecrypt.value;
+                debugger
+                const selectedTabId = localStorage.getItem('selectedTab');
+                const selectedDefault = document.getElementById('nav-files-tab');
+                const tabItem = document.getElementById(selectedTabId);
+                if (selectedTabId) {
+                    tabItem.click();
+                }else {
+                    selectedDefault.click();
+                }
+                const crePassword = document.getElementById('credential-password');
+                const creDePass = document.getElementById('credential-decryptValue');
+
+                creDePass.addEventListener("input", function() {
+                    crePassword.value = creDePass.value;
+                });
+            });
+            // Get all elements with the class "nav-item"
+            const navItems = document.querySelectorAll('.nav-item');
+
+            // Add a click event listener to each nav-item
+            navItems.forEach((navItem) => {
+                debugger
+                navItem.addEventListener('click', (event) => {
+                    const tabId = navItem.getAttribute('id');
+                    localStorage.setItem('selectedTab', tabId);
                 });
             });
         </script>

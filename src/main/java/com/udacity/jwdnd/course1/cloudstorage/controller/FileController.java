@@ -13,7 +13,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class FileController {
@@ -25,42 +27,54 @@ public class FileController {
         this.userService = userService;
     }
 
-    @PostMapping("/addFile")
-    public String addFile(@RequestParam("fileUpload") MultipartFile fileUpload, Authentication authentication, Model model) throws IOException {
+    @PostMapping("/add-file")
+    public String addFile(@RequestParam("fileUpload") MultipartFile fileUpload,Authentication authentication, Model model, RedirectAttributes redirectAttributes) throws IOException {
         String uploadError = null;
-
-        User user = new User();
-        user = userService.getUser(authentication.getName());
+        String successMsg = null;
+        int cnt = 0;
+        User user = userService.getUser(authentication.getName());
 
         if (fileUpload.isEmpty()) {
-            uploadError = "Please select a non-empty file.";
+            uploadError = "Please select a non-empty file!";
+            redirectAttributes.addFlashAttribute("messageError", uploadError);
             return"redirect:/home";
         }
-
         if (!fileService.isExistFile(fileUpload.getOriginalFilename(), user.getUserId())) {
-            uploadError = "The file already exists.";
+            uploadError = "The file already exists!";
+            redirectAttributes.addFlashAttribute("messageError", uploadError);
             return"redirect:/home";
-
         }
 
-        if(uploadError!=null) {
-            model.addAttribute("error",uploadError);
-        }else {
-            model.addAttribute("success","File uploaded successfully!");
+        try {
+            cnt = fileService.addFile(fileUpload, user.getUserId());
+        } catch (MaxUploadSizeExceededException e) {
+            throw e; // throw exception to accept GlobalExceptionHandler handle
         }
 
-        fileService.addFile(fileUpload, user.getUserId());
-        //return"/home";
+        if(cnt > 0) {
+            successMsg = "File uploaded successfully!";
+            redirectAttributes.addFlashAttribute("messageSuccess",successMsg);
+            return "redirect:/home";
+        }
+        uploadError = "File uploaded failure!";
+        model.addAttribute("messageError",uploadError);
+        return "redirect:/home";
+    }
+
+    @GetMapping("delete-file/{id}")
+    public String deleteFile(@PathVariable Integer id, RedirectAttributes redirectAttributes){
+        int cnt = fileService.deleteFile(id);
+        if (cnt > 0) {
+            String successMsg = "File deleted successfully!";
+            redirectAttributes.addFlashAttribute("messageSuccess", successMsg);
+            return"redirect:/home";
+        }
+        String errorMsg = "File deleted failure!";
+        redirectAttributes.addFlashAttribute("messageError", errorMsg);
         return"redirect:/home";
     }
 
-    @GetMapping("deleteFile/{id}")
-    public String delelteFile(@PathVariable Integer id){
-        fileService.deleteFile(id);
-        return"redirect:/home";
-    }
-
-    @GetMapping("downloadFile/{id}")
+    @GetMapping("download-file/{id}")
     public ResponseEntity<ByteArrayResource> downloadFile(@PathVariable Integer id){
         File file = fileService.getFileById(id);
         return ResponseEntity.ok()

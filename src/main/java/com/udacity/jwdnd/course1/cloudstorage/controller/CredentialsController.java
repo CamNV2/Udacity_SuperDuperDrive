@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
 
 @Controller
 public class CredentialsController {
@@ -24,22 +27,59 @@ public class CredentialsController {
         this.userService = userService;
     }
 
-    @GetMapping("/delete-Credentials/{id}")
-    public String deleteCredentials(@PathVariable int id){
-        credentialsService.deleteById(id);
+    @GetMapping("/delete-credentials/{id}")
+    public String deleteCredentials(@PathVariable int id, RedirectAttributes redirectAttributes){
+        int cnt = credentialsService.deleteById(id);
+        if (cnt > 0) {
+            String successMsg = "Credential deleted successfully!";
+            redirectAttributes.addFlashAttribute("messageSuccess", successMsg);
+            return"redirect:/home";
+        }
+        String errorMsg = "Credential deleted failure!";
+        redirectAttributes.addFlashAttribute("messageError", errorMsg);
         return"redirect:/home";
     }
 
-    @PostMapping("/saveCredentials")
-    public String saveCredentials(@ModelAttribute("credentialsFrom") Credentials credentials, Model model, Authentication authentication){
+    @PostMapping("/save-credentials")
+    public String saveCredentials(@ModelAttribute("credentialsFrom") Credentials credentials, Model model, Authentication authentication, RedirectAttributes redirectAttributes){
         User user = userService.getUser(authentication.getName());
-        if(credentials.getCredentialId() != null ){
-            credentialsService.updateCredentials(credentials);
+        String successMsg = null;
+        boolean isExistUser = credentialsService.checkExistUserName(credentials.getUsername());
+        if (credentials.getCredentialId() != null ){
+
+            if (isExistUser){
+                String errorMsg = "User already available!";
+                redirectAttributes.addFlashAttribute("messageError", errorMsg);
+                return"redirect:/home";
+            }
+            int cntUpt = credentialsService.updateCredentials(credentials);
+            if (cntUpt > 0) {
+                successMsg = "Credential update successfully!";
+            } else {
+                String errorMsg ="Credential updated failure!";
+                redirectAttributes.addFlashAttribute("messageError", errorMsg);
+                return"redirect:/home";
+            }
         } else if(credentials.getCredentialId() == null){
             credentials.setUserId(user.getUserId());
-            credentialsService.addCredentials(credentials);
+
+            if (isExistUser) {
+                String errorMsg = "User already available!";
+                redirectAttributes.addFlashAttribute("messageError", errorMsg);
+                return"redirect:/home";
+            }
+            int cnt = credentialsService.addCredentials(credentials);
+            if (cnt > 0) {
+                successMsg = "Credential created successfully!";
+            } else {
+                String errorMsg = "Credential created failure!";
+                redirectAttributes.addFlashAttribute("messageError", errorMsg);
+                return"redirect:/home";
+            }
         }
-        model.addAttribute("credentialsList", credentialsService.getListCredentialsByUserName(user.getUsername()));
+        redirectAttributes.addFlashAttribute("messageSuccess", successMsg);
+        model.addAttribute("credentialsList", credentialsService.getListAll());
         return"redirect:/home";
     }
+
 }

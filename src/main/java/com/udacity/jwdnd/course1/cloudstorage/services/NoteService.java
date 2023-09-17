@@ -23,8 +23,8 @@ public class NoteService {
         return noteMapper.insertNote(new Note(null,note.getNoteTitle(),note.getNoteDescription(),note.getUserId()));
     }
 
-    public void deleteNote(int noteID){
-        noteMapper.deleteNote(noteID);
+    public int deleteNote(int noteID){
+        return noteMapper.deleteNote(noteID);
     }
 
     public int updateNote(Note note){
@@ -36,6 +36,10 @@ public class NoteService {
 
     public Note findNoteById(int id){
         return noteMapper.findNoteById(id);
+    }
+
+    public Note findNoteExist(String noteTitle, String description){
+        return noteMapper.findNoteExist(noteTitle, description);
     }
 
 }

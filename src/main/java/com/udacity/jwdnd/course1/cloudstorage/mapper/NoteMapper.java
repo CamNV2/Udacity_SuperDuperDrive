@@ -19,9 +19,12 @@ public interface NoteMapper {
     @Select("SELECT * FROM NOTES WHERE noteId = #{noteId}")
     Note findNoteById(int noteId);
 
+    @Select("SELECT * FROM NOTES WHERE noteTitle = #{noteTitle} AND notedescription = #{description}")
+    Note findNoteExist(String noteTitle, String description);
+
     @Update("UPDATE NOTES SET noteTitle = #{noteTitle} , noteDescription = #{noteDescription} WHERE  noteId = #{noteId}")
     int updateNote(Note note);
 
     @Delete("DELETE FROM NOTES WHERE noteId = #{noteId}")
-    void deleteNote (int noteId);
+    int deleteNote (int noteId);
 }

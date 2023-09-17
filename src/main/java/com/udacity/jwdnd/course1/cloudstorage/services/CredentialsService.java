@@ -17,32 +17,40 @@ public class CredentialsService {
         this.encryptionService = encryptionService;
         this.hashService = hashService;
     }
-    public List<Credentials> getListCredentialsByUserName (String userName){
-        List<Credentials> credentials = credentialsMapper.getListByUserName(userName);
+    public List<Credentials> getListAll (){
+        List<Credentials> credentials = credentialsMapper.getListAll();
         for (int i = 0; i<credentials.size();i ++){
             credentials.get(i).setDecryptValue(encryptionService.decryptValue(credentials.get(i).getPassword(),credentials.get(i).getSalt()));
         }
         return credentials;
     }
-    public void addCredentials(Credentials credentials) {
+    public int addCredentials(Credentials credentials) {
         SecureRandom random = new SecureRandom();
         byte[] salt = new byte[16];
         random.nextBytes(salt);
         String encodedSalt = Base64.getEncoder().encodeToString(salt);
         String encryptedPassword = encryptionService.encryptValue(credentials.getPassword(), encodedSalt);
-        credentialsMapper.insertCredentials(new Credentials(null,credentials.getUrl(), credentials.getUsername(), encodedSalt, encryptedPassword, credentials.getUserId()));
+        return credentialsMapper.insertCredentials(new Credentials(null,credentials.getUrl(), credentials.getUsername(), encodedSalt, encryptedPassword, credentials.getUserId()));
     }
-    public void updateCredentials(Credentials credentials) {
+    public int updateCredentials(Credentials credentials) {
         Credentials credentialUd = credentialsMapper.getCredentialById(credentials.getCredentialId());
         credentials.setSalt(credentialUd.getSalt());
         String encryptedPassword = encryptionService.encryptValue(credentials.getPassword(), credentials.getSalt());
         String decryptValuePassword = encryptionService.decryptValue(encryptedPassword, credentials.getSalt());
         credentials.setPassword(encryptedPassword);
         credentials.setDecryptValue(decryptValuePassword);
-        credentialsMapper.updateCredentials(credentials);
+        return credentialsMapper.updateCredentials(credentials);
     }
-    public void deleteById (int credentialsId){
-        credentialsMapper.deleteCredentials(credentialsId);
+    public int deleteById (int credentialsId){
+        return credentialsMapper.deleteCredentials(credentialsId);
     }
-
+    public List<Credentials> getCredentialByUserName (String userName){
+        return credentialsMapper.getCredentialByUserName(userName);
+    }
+    public boolean checkExistUserName (String userName){
+        if(getCredentialByUserName(userName) != null && getCredentialByUserName(userName).size() > 0) {
+            return true;
+        }
+        return false;
+    }
 }

@@ -16,9 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 public class HomeController {
     private final UserService userService;
     private final NoteService noteService;
-
     private final FileService fileService;
-
     private final CredentialsService credentialsService;
 
     public HomeController(UserService userService, NoteService noteService, FileService fileService, CredentialsService credentialsService) {
@@ -29,11 +27,10 @@ public class HomeController {
     }
 
     @GetMapping("/home")
-    public String getHomePage(Model model, Authentication authentication, HttpServletRequest request){
-        User user = new User();
-        user = userService.getUser(authentication.getName());
+    public String getHomePage(Model model, Authentication authentication){
+        User user = userService.getUser(authentication.getName());
         model.addAttribute("fileList",fileService.getListFileByUserId(user.getUserId()));
-        model.addAttribute("credentialsList", credentialsService.getListCredentialsByUserName(authentication.getName()));
+        model.addAttribute("credentialsList", credentialsService.getListAll());
         model.addAttribute("user", userService.getUser(authentication.getName()));
         model.addAttribute("noteList", noteService.getListByUser(authentication.getName()));
         return "home";

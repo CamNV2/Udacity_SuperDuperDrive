@@ -2,6 +2,7 @@ package com.udacity.jwdnd.course1.cloudstorage.services;
 
 import com.udacity.jwdnd.course1.cloudstorage.mapper.FileMapper;
 import com.udacity.jwdnd.course1.cloudstorage.entity.File;
+import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,15 +20,17 @@ public class FileService {
         return fileMapper.getListFileByUserId(userId);
     }
 
-    public void addFile(MultipartFile fileUpload, Integer userid) throws IOException {
-        File file = new File();
+    public int addFile(MultipartFile fileUpload, Integer userid) throws IOException {
+        File file = null;
+        int rs = 0;
+        file = new File();
         file.setContentType(fileUpload.getContentType());
         file.setFileData(fileUpload.getBytes());
         file.setFileName(fileUpload.getOriginalFilename());
         file.setFileSize(Long.toString(fileUpload.getSize()));
         file.setUserId(userid);
-
-        fileMapper.addFile(file);
+        rs = fileMapper.addFile(file);
+        return rs;
     }
 
     public boolean isExistFile(String fileName, Integer userId) {
@@ -38,8 +41,8 @@ public class FileService {
         return true;
     }
 
-    public void deleteFile(Integer fileId){
-        fileMapper.deleteFileById(fileId);
+    public int deleteFile(Integer fileId){
+        return fileMapper.deleteFileById(fileId);
     }
 
     public File getFileById(Integer fileId){
